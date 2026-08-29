@@ -64,34 +64,90 @@ const CheckCircleIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-
   </svg>
 );
 
+const DocumentDuplicateIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+  </svg>
+);
+
 /* ──────────────────────────────────────────────────────────────
-   Dashboard Navbar
+   Dashboard Navbar with Tab Navigation
    ────────────────────────────────────────────────────────────── */
-const DashboardNav: React.FC = () => {
+interface DashboardNavProps {
+  activeTab: 'simulator' | 'policies' | 'architecture';
+  setActiveTab: (tab: 'simulator' | 'policies' | 'architecture') => void;
+}
+
+const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab, setActiveTab }) => {
   const navigate = useNavigate();
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2.5 hover:opacity-85 transition-opacity"
-        >
-          <div className="w-8 h-8 rounded-xl bg-cp-600 flex items-center justify-center text-white font-black text-sm shadow-xs">
-            CP
-          </div>
-          <span className="text-base font-bold text-gray-900 tracking-tight">ControlPlane.ai</span>
-        </button>
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-xs">
+      <div className="max-w-7xl mx-auto px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Left: Logo & Overview link */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2.5 hover:opacity-85 transition-opacity"
+            title="Return to Overview"
+          >
+            <div className="w-8 h-8 rounded-xl bg-cp-600 flex items-center justify-center text-white font-black text-sm shadow-xs">
+              CP
+            </div>
+            <span className="text-base font-bold text-gray-900 tracking-tight">ControlPlane.ai</span>
+          </button>
 
-        <h1 className="text-sm font-semibold text-gray-600 hidden sm:block">
-          AI Governance Dashboard
-        </h1>
+          <span className="hidden sm:inline text-gray-300">/</span>
 
+          <button
+            onClick={() => navigate('/')}
+            className="hidden sm:flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-cp-600 transition-colors"
+          >
+            ← Overview
+          </button>
+        </div>
+
+        {/* Center: Segmented Navigation Pills */}
+        <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 self-start sm:self-auto">
+          <button
+            onClick={() => setActiveTab('simulator')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'simulator'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Live Gateway Simulator
+          </button>
+          <button
+            onClick={() => setActiveTab('policies')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'policies'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Policy & Risk Thresholds
+          </button>
+          <button
+            onClick={() => setActiveTab('architecture')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'architecture'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            SLA & Architecture
+          </button>
+        </div>
+
+        {/* Right: Live Pulse Status */}
         <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
-          <span className="text-emerald-700 font-semibold">Gateway Active :8000</span>
+          <span className="text-emerald-700 font-semibold">Gateway Online (:8000)</span>
         </div>
       </div>
     </header>
@@ -101,7 +157,6 @@ const DashboardNav: React.FC = () => {
 /* ──────────────────────────────────────────────────────────────
    Scenario Selector
    ────────────────────────────────────────────────────────────── */
-
 const SCENARIO_COLORS: Record<string, string> = {
   sc01_air_canada:    'border-t-rose-700',
   sc04_zillow_drift:  'border-t-amber-600',
@@ -126,9 +181,9 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   <div className="bg-white border border-gray-200/90 rounded-2xl p-6 mb-6 shadow-xs">
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
       <div>
-        <h2 className="text-base font-bold text-gray-900">Select Governance Scenario</h2>
+        <h2 className="text-lg font-bold text-gray-900">Select Governance Scenario Benchmark</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          Select a benchmark to evaluate policy routing and execution safety
+          Select an enterprise failure mode to evaluate real-time policy interception and routing
         </p>
       </div>
       <button
@@ -150,7 +205,7 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
       </button>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
       {PRESET_SCENARIOS.map((preset) => {
         const isActive = selectedPresetId === preset.id;
         const topColor = SCENARIO_COLORS[preset.id] ?? 'border-t-gray-400';
@@ -158,19 +213,19 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
           <button
             key={preset.id}
             onClick={() => onSelectPreset(preset)}
-            className={`text-left p-4 rounded-xl border-t-4 border border-gray-200/90 transition-all duration-150 flex flex-col gap-2 ${topColor} ${
+            className={`text-left p-4 rounded-xl border-t-4 border border-gray-200/90 transition-all duration-150 flex flex-col gap-2.5 ${topColor} ${
               isActive
-                ? 'bg-cp-50/60 ring-2 ring-cp-500 shadow-xs'
+                ? 'bg-cp-50/70 ring-2 ring-cp-500 shadow-xs'
                 : 'bg-white hover:bg-gray-50'
             }`}
           >
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200/80 self-start">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200/80 self-start">
               {preset.tag}
             </span>
-            <div className="text-xs font-bold text-gray-900 line-clamp-1">
+            <div className="text-sm font-bold text-gray-900 line-clamp-1">
               {preset.title.split(':')[0]}
             </div>
-            <div className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">
+            <div className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
               {preset.title.split(':')[1]?.trim() || preset.description}
             </div>
           </button>
@@ -181,7 +236,7 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
 );
 
 /* ──────────────────────────────────────────────────────────────
-   Input Console
+   Input Console (Readable Typography & Clean Textareas)
    ────────────────────────────────────────────────────────────── */
 interface InputConsoleProps {
   request: GuardRequest;
@@ -210,7 +265,7 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
         <select
           value={request.use_case}
           onChange={(e) => onChange({ ...request, use_case: e.target.value as UseCase })}
-          className="w-full text-xs font-medium text-gray-800 bg-gray-50 border border-gray-300/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500"
+          className="w-full text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500"
         >
           {Object.entries(USE_CASE_LABELS).map(([k, v]) => (
             <option key={k} value={k}>
@@ -229,7 +284,7 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
           rows={3}
           value={request.prompt}
           onChange={(e) => onChange({ ...request, prompt: e.target.value })}
-          className="w-full text-xs font-mono text-gray-800 bg-gray-50 border border-gray-300/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500 resize-y leading-relaxed"
+          className="w-full text-sm font-sans text-gray-900 bg-white border border-gray-300 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-cp-500 resize-y leading-relaxed"
           placeholder="Enter prompt..."
         />
       </div>
@@ -243,10 +298,10 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
             className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-cp-600 transition-colors"
           >
             <span>Ground Truth / RAG Context</span>
-            <span className="text-[10px] text-gray-400">{contextOpen ? '▲' : '▼'}</span>
+            <span className="text-xs text-gray-400">{contextOpen ? '▲' : '▼'}</span>
           </button>
           {request.context_documents.length > 0 && (
-            <span className="text-[10px] font-semibold text-cp-700 bg-cp-50 px-2 py-0.5 rounded border border-cp-200">
+            <span className="text-xs font-semibold text-cp-700 bg-cp-50 px-2 py-0.5 rounded border border-cp-200">
               Tier 2 Active
             </span>
           )}
@@ -262,7 +317,7 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
                 context_documents: e.target.value ? [e.target.value] : [],
               })
             }
-            className="w-full text-xs font-mono text-gray-800 bg-gray-50 border border-gray-300/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500 resize-y leading-relaxed"
+            className="w-full text-sm font-sans text-gray-900 bg-white border border-gray-300 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-cp-500 resize-y leading-relaxed"
             placeholder="Enter reference documents for Tier 2 grounding verification..."
           />
         )}
@@ -277,12 +332,12 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
           rows={3}
           value={request.candidate_response}
           onChange={(e) => onChange({ ...request, candidate_response: e.target.value })}
-          className="w-full text-xs font-mono text-gray-800 bg-gray-50 border border-gray-300/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500 resize-y leading-relaxed"
+          className="w-full text-sm font-sans text-gray-900 bg-white border border-gray-300 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-cp-500 resize-y leading-relaxed"
           placeholder="Enter model candidate output..."
         />
       </div>
 
-      {/* Token Count */}
+      {/* Token Count & Valuation */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
@@ -292,7 +347,7 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
             type="number"
             value={request.token_count}
             onChange={(e) => onChange({ ...request, token_count: parseInt(e.target.value) || 0 })}
-            className="w-full text-xs font-mono text-gray-800 bg-gray-50 border border-gray-300/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500"
+            className="w-full text-sm font-mono text-gray-900 bg-white border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500"
           />
         </div>
         {request.request_metadata?.valuation_amount !== undefined && (
@@ -312,7 +367,7 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
                   },
                 })
               }
-              className="w-full text-xs font-mono text-gray-800 bg-gray-50 border border-gray-300/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500"
+              className="w-full text-sm font-mono text-gray-900 bg-white border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cp-500"
             />
           </div>
         )}
@@ -341,7 +396,7 @@ const InputConsole: React.FC<InputConsoleProps> = ({ request, onChange, onSubmit
 };
 
 /* ──────────────────────────────────────────────────────────────
-   Action Banner (Refined Softened Failure Themes)
+   Action Banner (With Copy Audit JSON Feature)
    ────────────────────────────────────────────────────────────── */
 interface ActionConfig {
   label: string;
@@ -398,9 +453,16 @@ interface ActionBannerProps {
 }
 
 const ActionBanner: React.FC<ActionBannerProps> = ({ response, totalLatencyMs }) => {
+  const [copied, setCopied] = useState(false);
   const cfg = ACTION_CONFIG[response.action] ?? ACTION_CONFIG.allow;
   const IconComponent = cfg.icon;
   const severityPct = Math.min(100, response.decision.severity * 100);
+
+  const handleCopyAudit = () => {
+    navigator.clipboard.writeText(JSON.stringify(response, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className={`border rounded-2xl p-6 mb-5 shadow-xs ${cfg.bg} ${cfg.border}`}>
@@ -410,9 +472,19 @@ const ActionBanner: React.FC<ActionBannerProps> = ({ response, totalLatencyMs })
             <IconComponent className="w-6 h-6 text-cp-700" />
           </div>
           <div>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold ${cfg.badgeBg} ${cfg.badgeText} mb-1`}>
-              {cfg.label}
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold ${cfg.badgeBg} ${cfg.badgeText}`}>
+                {cfg.label}
+              </span>
+              <button
+                onClick={handleCopyAudit}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+                title="Copy full JSON decision payload"
+              >
+                <DocumentDuplicateIcon className="w-3.5 h-3.5" />
+                <span>{copied ? 'Audit Copied!' : 'Copy Audit JSON'}</span>
+              </button>
+            </div>
             <h3 className="text-xl font-bold text-gray-900">{cfg.headline}</h3>
             <p className="text-xs text-gray-500 font-mono mt-0.5">
               Request ID: {response.decision.request_id}
@@ -420,9 +492,9 @@ const ActionBanner: React.FC<ActionBannerProps> = ({ response, totalLatencyMs })
           </div>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-3xl font-bold text-gray-900 font-mono tracking-tight">
+          <div className="text-2xl font-bold text-gray-900 font-mono tracking-tight">
             {totalLatencyMs.toFixed(1)}
-            <span className="text-sm font-medium text-gray-500 ml-1">ms</span>
+            <span className="text-xs font-medium text-gray-500 ml-1">ms</span>
           </div>
           <div className="text-xs font-medium text-gray-500">Total Gateway Latency</div>
         </div>
@@ -430,7 +502,7 @@ const ActionBanner: React.FC<ActionBannerProps> = ({ response, totalLatencyMs })
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <div className="bg-white/80 border border-gray-200/80 rounded-xl p-3">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Severity Score</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Severity Score</div>
           <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1.5">
             <div
               className={`h-1.5 rounded-full ${severityPct > 70 ? 'bg-rose-700' : severityPct > 40 ? 'bg-amber-600' : 'bg-emerald-600'}`}
@@ -440,25 +512,25 @@ const ActionBanner: React.FC<ActionBannerProps> = ({ response, totalLatencyMs })
           <div className="text-sm font-bold text-gray-900 font-mono">{response.decision.severity.toFixed(2)}</div>
         </div>
         <div className="bg-white/80 border border-gray-200/80 rounded-xl p-3">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Confidence</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Confidence</div>
           <div className="text-sm font-bold text-gray-900 font-mono">{response.decision.confidence.toFixed(2)}</div>
         </div>
         <div className="bg-white/80 border border-gray-200/80 rounded-xl p-3">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Risk Category</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Risk Category</div>
           <div className="text-xs font-bold text-gray-900 uppercase">{response.decision.primary_risk_category}</div>
         </div>
         <div className="bg-white/80 border border-gray-200/80 rounded-xl p-3">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Applied Policy</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Applied Policy</div>
           <div className="text-xs font-medium text-gray-700">{response.decision.applied_use_case}</div>
         </div>
       </div>
 
       {response.decision.reasons.length > 0 && (
         <div className="bg-white/80 border border-gray-200/80 rounded-xl p-4">
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Diagnostic Findings</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Diagnostic Findings</div>
           <ul className="space-y-1">
             {response.decision.reasons.map((reason, i) => (
-              <li key={i} className="text-xs text-gray-700 font-medium flex items-start gap-2">
+              <li key={i} className="text-xs text-gray-800 font-medium flex items-start gap-2">
                 <span className="text-cp-600 font-bold">•</span>
                 {reason}
               </li>
@@ -516,10 +588,10 @@ const LatencyWaterfall: React.FC<LatencyWaterfallProps> = ({ response }) => {
 
       <div className="grid grid-cols-3 gap-3">
         {bars.map((b) => (
-          <div key={b.label} className="p-2.5 rounded-xl bg-gray-50 border border-gray-200/80">
+          <div key={b.label} className="p-3 rounded-xl bg-gray-50 border border-gray-200/80">
             <div className="flex items-center gap-1.5 mb-1">
               <span className={`w-2 h-2 rounded-full ${b.color}`} />
-              <span className="text-[11px] font-medium text-gray-600 line-clamp-1">{b.label}</span>
+              <span className="text-xs font-medium text-gray-600 line-clamp-1">{b.label}</span>
             </div>
             <div className="text-sm font-bold text-gray-900 font-mono">{b.ms.toFixed(2)} ms</div>
           </div>
@@ -555,7 +627,7 @@ const TierBreakdown: React.FC<TierBreakdownProps> = ({ response }) => {
               <span className="text-xs font-bold text-gray-900">PII & Privacy Scanner</span>
             </div>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+              className={`text-xs font-bold px-2 py-0.5 rounded ${
                 t1.pii.detected ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'
               }`}
             >
@@ -576,7 +648,7 @@ const TierBreakdown: React.FC<TierBreakdownProps> = ({ response }) => {
               <span className="text-xs font-bold text-gray-900">Injection Sentinel</span>
             </div>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+              className={`text-xs font-bold px-2 py-0.5 rounded ${
                 t1.injection_toxicity.detected ? 'bg-rose-100 text-rose-900' : 'bg-emerald-100 text-emerald-800'
               }`}
             >
@@ -599,7 +671,7 @@ const TierBreakdown: React.FC<TierBreakdownProps> = ({ response }) => {
               </span>
             </div>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+              className={`text-xs font-bold px-2 py-0.5 rounded ${
                 ca.detected ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
               }`}
             >
@@ -630,7 +702,7 @@ const TierBreakdown: React.FC<TierBreakdownProps> = ({ response }) => {
               <span className="text-xs font-bold text-gray-900">Tier 2 Grounding Verifier</span>
             </div>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+              className={`text-xs font-bold px-2 py-0.5 rounded ${
                 !t2Triggered
                   ? 'bg-gray-200 text-gray-600'
                   : t2?.detected
@@ -709,7 +781,7 @@ const DriftSequenceViewer: React.FC<DriftSequenceViewerProps> = ({ results, onCl
       <div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-gray-900">SC-04: Zillow Valuation Drift Sequence</span>
-          <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
+          <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
             5-Turn Stateful EMA Replay
           </span>
         </div>
@@ -743,7 +815,7 @@ const DriftSequenceViewer: React.FC<DriftSequenceViewerProps> = ({ results, onCl
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-900 font-mono">Turn #{res.step}</span>
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
                   isQuarantine
                     ? 'bg-amber-200 text-amber-900'
                     : isEdit
@@ -761,7 +833,7 @@ const DriftSequenceViewer: React.FC<DriftSequenceViewerProps> = ({ results, onCl
               <div>Severity: <span className="font-semibold text-gray-800">{res.severity.toFixed(2)}</span></div>
             </div>
 
-            <div className="mt-3 pt-2 border-t border-gray-200/80 text-[10px] font-semibold">
+            <div className="mt-3 pt-2 border-t border-gray-200/80 text-xs font-semibold">
               {isQuarantine ? (
                 <span className="text-amber-900">Held for Human Review</span>
               ) : isEdit ? (
@@ -773,6 +845,125 @@ const DriftSequenceViewer: React.FC<DriftSequenceViewerProps> = ({ results, onCl
           </div>
         );
       })}
+    </div>
+  </div>
+);
+
+/* ──────────────────────────────────────────────────────────────
+   Tab 2: Policy & Risk Thresholds View
+   ────────────────────────────────────────────────────────────── */
+const PolicyMatrixView: React.FC = () => {
+  const policies = [
+    {
+      useCase: 'Customer Support',
+      key: 'customer_support',
+      slaBudget: '< 150 ms',
+      blockSeverity: '0.70',
+      quarantineSeverity: '0.80',
+      tokenBaseline: 'μ = 120, σ = 35',
+      description: 'Zero-tolerance for ungrounded refund promises or PII leaks. High-volume customer facing SLA.',
+    },
+    {
+      useCase: 'Internal Copilot',
+      key: 'internal_copilot',
+      slaBudget: '< 500 ms',
+      blockSeverity: '0.85',
+      quarantineSeverity: '0.75',
+      tokenBaseline: 'μ = 450, σ = 120',
+      description: 'Employee-facing productivity assistant with higher token allowances and moderate prompt injection tolerance.',
+    },
+    {
+      useCase: 'Decision Agent',
+      key: 'decision_agent',
+      slaBudget: '< 1.5 s',
+      blockSeverity: '0.90',
+      quarantineSeverity: '0.65',
+      tokenBaseline: 'Stateful EMA (α=0.40)',
+      description: 'Autonomous financial/valuation agent. Strict drift threshold (3.0σ) triggering immediate human review.',
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs">
+        <h2 className="text-lg font-bold text-gray-900 mb-1">Enterprise Policy & Action Matrix</h2>
+        <p className="text-sm text-gray-500">
+          ControlPlane.ai applies context-specific policy thresholds based on use case risk profiles.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {policies.map((p) => (
+            <div key={p.key} className="p-5 rounded-xl border border-gray-200 bg-gray-50/50 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-bold text-gray-900">{p.useCase}</h3>
+                  <span className="text-xs font-mono font-semibold bg-cp-50 text-cp-700 border border-cp-200 px-2 py-0.5 rounded">
+                    {p.slaBudget}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">{p.description}</p>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-gray-200 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Block Threshold:</span>
+                  <span className="font-bold text-rose-700">S ≥ {p.blockSeverity}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Quarantine Cutoff:</span>
+                  <span className="font-bold text-amber-700">S ≥ {p.quarantineSeverity}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Volume/Drift Metric:</span>
+                  <span className="font-bold text-gray-900">{p.tokenBaseline}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────────────────────
+   Tab 3: System SLA & Architecture View
+   ────────────────────────────────────────────────────────────── */
+const ArchitectureView: React.FC = () => (
+  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs space-y-6">
+    <div>
+      <h2 className="text-lg font-bold text-gray-900 mb-1">Architecture & Deterministic Invariants</h2>
+      <p className="text-sm text-gray-500">
+        Multi-tier concurrent scanning pipeline enforcing fail-closed security and sub-2ms latency budgets.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-5 rounded-xl border border-gray-200 bg-gray-50/50 space-y-3">
+        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <ShieldCheckIcon className="w-4 h-4 text-cp-600" />
+          <span>Tier 1 Fast Scanners (&lt;2ms)</span>
+        </h3>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          Executes PII redaction, prompt injection detection, and stateful EMA drift tracking concurrently via asynchronous non-blocking workers.
+        </p>
+        <div className="text-xs font-mono text-gray-500 bg-white p-3 rounded-lg border border-gray-200">
+          Latency Overhead: 0.5ms – 1.5ms
+        </div>
+      </div>
+
+      <div className="p-5 rounded-xl border border-gray-200 bg-gray-50/50 space-y-3">
+        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <TargetIcon className="w-4 h-4 text-cp-600" />
+          <span>Tier 2 NLI Grounding Verifier</span>
+        </h3>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          Conditioned only when context documents are present and Tier 1 passes. Uses unit-aware atomic claim entailment to prevent false-negative numeric mismatches.
+        </p>
+        <div className="text-xs font-mono text-gray-500 bg-white p-3 rounded-lg border border-gray-200">
+          Target Execution: &lt;150ms conditional budget
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -796,6 +987,7 @@ const EmptyState: React.FC = () => (
    Dashboard Main Component
    ────────────────────────────────────────────────────────────── */
 export const Dashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'simulator' | 'policies' | 'architecture'>('simulator');
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>('sc01_air_canada');
   const [request, setRequest] = useState<GuardRequest>({
     use_case: PRESET_SCENARIOS[0].use_case,
@@ -907,70 +1099,78 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50/60 font-sans text-gray-900 antialiased flex flex-col">
-      <DashboardNav />
+      <DashboardNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="max-w-7xl mx-auto px-6 py-8 flex-1 w-full">
-        <ScenarioSelector
-          selectedPresetId={selectedPresetId}
-          onSelectPreset={handleSelectPreset}
-          onRunDriftSequence={handleRunDriftSequence}
-          isRunningDrift={isRunningDrift}
-        />
-
-        {driftResults && (
-          <DriftSequenceViewer
-            results={driftResults}
-            onClose={() => setDriftResults(null)}
-          />
-        )}
-
-        {errorMessage && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6 text-xs font-medium text-rose-900 flex items-center justify-between shadow-xs">
-            <div className="flex items-center gap-2">
-              <AlertTriangleIcon className="w-4 h-4 text-rose-700 shrink-0" />
-              <span>
-                <strong>Connection Error:</strong> {errorMessage}
-              </span>
-            </div>
-            <button
-              onClick={() => setErrorMessage(null)}
-              className="text-rose-700 hover:text-rose-950 underline font-mono text-[11px]"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5 flex flex-col">
-            <InputConsole
-              request={request}
-              onChange={setRequest}
-              onSubmit={() => handleExecuteGuard()}
-              isLoading={isLoading}
+        {activeTab === 'policies' ? (
+          <PolicyMatrixView />
+        ) : activeTab === 'architecture' ? (
+          <ArchitectureView />
+        ) : (
+          <>
+            <ScenarioSelector
+              selectedPresetId={selectedPresetId}
+              onSelectPreset={handleSelectPreset}
+              onRunDriftSequence={handleRunDriftSequence}
+              isRunningDrift={isRunningDrift}
             />
-          </div>
 
-          <div className="lg:col-span-7 flex flex-col">
-            {response ? (
-              <>
-                <ActionBanner
-                  response={response}
-                  totalLatencyMs={response.latency_breakdown.total_gateway_overhead_ms}
-                />
-                <LatencyWaterfall response={response} />
-                <TierBreakdown response={response} />
-                <OutputDiff
-                  rawCandidate={request.candidate_response}
-                  finalResponse={response.final_response}
-                  action={response.action}
-                />
-              </>
-            ) : (
-              <EmptyState />
+            {driftResults && (
+              <DriftSequenceViewer
+                results={driftResults}
+                onClose={() => setDriftResults(null)}
+              />
             )}
-          </div>
-        </div>
+
+            {errorMessage && (
+              <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6 text-xs font-medium text-rose-900 flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2">
+                  <AlertTriangleIcon className="w-4 h-4 text-rose-700 shrink-0" />
+                  <span>
+                    <strong>Connection Error:</strong> {errorMessage}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setErrorMessage(null)}
+                  className="text-rose-700 hover:text-rose-950 underline font-mono text-xs"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5 flex flex-col">
+                <InputConsole
+                  request={request}
+                  onChange={setRequest}
+                  onSubmit={() => handleExecuteGuard()}
+                  isLoading={isLoading}
+                />
+              </div>
+
+              <div className="lg:col-span-7 flex flex-col">
+                {response ? (
+                  <>
+                    <ActionBanner
+                      response={response}
+                      totalLatencyMs={response.latency_breakdown.total_gateway_overhead_ms}
+                    />
+                    <LatencyWaterfall response={response} />
+                    <TierBreakdown response={response} />
+                    <OutputDiff
+                      rawCandidate={request.candidate_response}
+                      finalResponse={response.final_response}
+                      action={response.action}
+                    />
+                  </>
+                ) : (
+                  <EmptyState />
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       <footer className="border-t border-gray-200 bg-white py-6 text-center text-xs text-gray-500">
