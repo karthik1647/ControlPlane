@@ -4,14 +4,12 @@ import re
 import time
 from backend.app.models import PIIScanResult
 
-# Note on CREDIT_CARD_REGEX: This pattern is intentionally broad to catch formatted
-# sequences across major issuers; false positives are filtered downstream by _luhn_checksum.
-CREDIT_CARD_REGEX = re.compile(r"\b(?:\d[ -]*?){13,16}\b")
+CREDIT_CARD_REGEX = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
 EMAIL_REGEX = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 SSN_REGEX = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 AADHAAR_REGEX = re.compile(r"\b\d{4}\s\d{4}\s\d{4}\b")
 PHONE_REGEX = re.compile(r"\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
-API_KEY_REGEX = re.compile(r"\b(?:sk-[a-zA-Z0-9]{32,}|ghp_[a-zA-Z0-9]{36}|AIza[0-9A-Za-z-_]{35})\b")
+API_KEY_REGEX = re.compile(r"\b(?:sk-[a-zA-Z0-9_\-]{16,}|whsec_[a-zA-Z0-9_\-]{16,}|ghp_[a-zA-Z0-9]{36}|AIza[0-9A-Za-z-_]{35})\b")
 
 
 def _luhn_checksum(card_str: str) -> bool:

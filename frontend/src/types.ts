@@ -114,3 +114,50 @@ export interface DriftStepResult {
   severity: number;
   response: GuardResponse;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Benchmark Suite & HITL Feedback Contracts
+// ─────────────────────────────────────────────────────────────
+export interface BenchmarkCaseResult {
+  id: string;
+  domain: string;
+  case_type: 'POSITIVE' | 'NEGATIVE';
+  expected_action: string;
+  actual_action: string;
+  passed: boolean;
+  latency_ms: number;
+  severity: number;
+  confidence: number;
+  primary_risk: string;
+  prompt: string;
+  findings: string[];
+}
+
+export interface BenchmarkMetrics {
+  total_cases: number;
+  passed_cases: number;
+  accuracy_pct: number;
+  false_positive_rate: number;
+  false_negative_rate: number;
+  precision_pct: number;
+  recall_pct: number;
+  trust_score_pct: number;
+  avg_tier1_latency_ms: number;
+  results: BenchmarkCaseResult[];
+}
+
+export interface QuarantineItem {
+  request_id: string;
+  timestamp: number;
+  use_case: string;
+  prompt: string;
+  candidate_response: string;
+  asset_id?: string;
+  valuation_amount?: number;
+  severity: number;
+  confidence: number;
+  reasons: string[];
+  z_score?: number;
+  observed_value?: number;
+  baseline_value?: number;
+}

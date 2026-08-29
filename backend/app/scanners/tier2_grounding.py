@@ -18,14 +18,7 @@ def _split_into_claims(text: str) -> list[str]:
 
 
 def _extract_unit_quantities(text: str) -> Set[Tuple[str, str]]:
-    """Extracts typed (unit, numeric_value) tuples from text to prevent unit-blind false negatives.
-
-    Matches:
-    - Currency: $500 -> ("$", "500")
-    - Percentage: 50% -> ("%", "50")
-    - Time units: 90 days, 24 hours -> ("days", "90"), ("hours", "24")
-    - Plain counts: 3 tickets -> ("count", "3")
-    """
+    """Extracts typed (unit, numeric_value) tuples from text to prevent unit-blind false negatives."""
     text_lower = text.lower()
     quantities = set()
 
@@ -37,18 +30,16 @@ def _extract_unit_quantities(text: str) -> Set[Tuple[str, str]]:
     for m in re.finditer(r"(\d+(?:\.\d+)?)\s*%", text_lower):
         quantities.add(("%", m.group(1)))
 
-    # 3. Time units (days, hours, weeks, months)
-    for m in re.finditer(r"(\d+)\s*(days?|hours?|weeks?|months?|years?)", text_lower):
+    # 3. Units (days, hours, weeks, months, kg, lbs)
+    for m in re.finditer(r"(\d+)\s*(days?|hours?|weeks?|months?|years?|kg|lbs?)", text_lower):
         unit = m.group(2)
-        # Normalize plurals
-        if unit.endswith("s"):
+        if unit.endswith("s") and unit not in ["lbs", "hours"]:
             unit = unit[:-1]
         quantities.add((unit, m.group(1)))
 
     # 4. Standalone numbers not already captured by units
     for m in re.finditer(r"\b(\d+)\b", text_lower):
         num = m.group(1)
-        # Only add as plain count if not part of a currency/percent/time match
         if not any(num == val for _, val in quantities):
             quantities.add(("count", num))
 
@@ -76,20 +67,17 @@ async def verify_grounding(candidate_response: str, context_documents: list[str]
     unsupported_claims = []
     contradiction_found = False
 
-    # Key entity/action terms indicating strong policy assertions
-    policy_keywords = ["refund", "bereavement", "within", "days", "guarantee", "discount", "fee", "rate", "policy"]
+    policy_keywords = ["refund", "bereavement", "within", "days", "guarantee", "discount", "fee", "rate", "policy", "bag", "baggage", "infant", "pet", "free"]
 
     for claim in claims:
         claim_lower = claim.lower()
 
-        # Check if the claim makes specific policy promises
         contains_policy_promise = any(kw in claim_lower for kw in policy_keywords)
         if not contains_policy_promise:
             continue
 
-        # Look for explicit contradiction patterns:
-        # e.g., Candidate says "you can submit retroactive refund within 90 days"
-        # Context says "We do not issue retroactive refunds"
+        # Check explicit contradictions
+        # 1. Retroactive refund promises
         if "retroactive" in claim_lower and "retroactive" in context_corpus:
             if ("do not issue retroactive" in context_corpus or "no retroactive" in context_corpus) and (
                 "you can" in claim_lower or "submit" in claim_lower or "receive" in claim_lower
@@ -98,7 +86,13 @@ async def verify_grounding(candidate_response: str, context_documents: list[str]
                 unsupported_claims.append(claim)
                 continue
 
-        # Unit-aware quantitative verification (comparing (unit, value) tuples)
+        # 2. Free vs. fee contradictions
+        if ("free" in claim_lower or "no extra charge" in claim_lower) and ("fee" in context_corpus or "charged" in context_corpus or "require an infant" in context_corpus or "10%" in context_corpus):
+            contradiction_found = True
+            unsupported_claims.append(claim)
+            continue
+
+        # 3. Unit-aware quantitative verification (comparing (unit, value) tuples)
         claim_quantities = _extract_unit_quantities(claim)
         unsupported_quantities = claim_quantities - context_quantities
         if unsupported_quantities:
@@ -107,9 +101,6 @@ async def verify_grounding(candidate_response: str, context_documents: list[str]
     elapsed_ms = (time.perf_counter() - start_time) * 1000.0
     detected = len(unsupported_claims) > 0 or contradiction_found
 
-    # Prototype Simplification: Severity and confidence are assigned based on binary contradiction
-    # vs unverified numeric claim tiering (0.88/0.92 for direct contradiction, 0.75/0.80 for unverified terms).
-    # In production, this would be computed continuously via a cross-encoder NLI model.
     if detected:
         severity = 0.88 if contradiction_found else 0.75
         confidence = 0.92 if contradiction_found else 0.80

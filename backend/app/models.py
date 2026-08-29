@@ -1,4 +1,4 @@
-"""Data contracts for ControlPlane.ai Gateway (/v1/chat/guard)."""
+"""Data contracts for ControlPlane.ai Gateway (/v1/chat/guard, /v1/chat/evaluate-batch, /v1/feedback/override)."""
 
 from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
@@ -34,14 +34,11 @@ class CostScanResult(BaseModel):
     detected: bool = False
     severity: float = 0.0
     confidence: float = 1.0
-    # metric_type distinguishes which anomaly scanner populated this result:
-    # "token_count" → scan_cost_anomaly (token-volume baseline)
-    # "valuation"   → drift_sentinel.record_valuation (dollar-value EMA drift)
     metric_type: Literal["token_count", "valuation"] = "token_count"
-    observed_value: float = 0.0   # tokens (token_count path) or dollars (valuation path)
-    baseline_value: float = 0.0   # per-use-case token baseline or asset-specific μ₀
-    token_count: int = 0          # kept for token-anomaly path; 0 on valuation path
-    baseline_mean: float = 0.0    # alias of baseline_value (retained for router compat)
+    observed_value: float = 0.0
+    baseline_value: float = 0.0
+    token_count: int = 0
+    baseline_mean: float = 0.0
     z_score: float = 0.0
     latency_ms: float = 0.0
 
@@ -51,7 +48,7 @@ class GroundingScanResult(BaseModel):
     severity: float = 0.0
     confidence: float = 1.0
     unsupported_claims: list[str] = Field(default_factory=list)
-    grounding_score: float = 1.0  # 1.0 = fully grounded, 0.0 = completely contradicted
+    grounding_score: float = 1.0
     latency_ms: float = 0.0
 
 
@@ -85,3 +82,53 @@ class GuardResponse(BaseModel):
     tier2_results: Optional[GroundingScanResult] = None
     tier2_triggered: bool = False
     latency_breakdown: LatencyBreakdown
+
+
+# ─────────────────────────────────────────────────────────────
+# Benchmark & Evaluation Metrics Schemas
+# ─────────────────────────────────────────────────────────────
+class BenchmarkCaseResult(BaseModel):
+    id: str
+    domain: str
+    case_type: Literal["POSITIVE", "NEGATIVE"]
+    expected_action: str
+    actual_action: str
+    passed: bool
+    latency_ms: float
+    severity: float
+    confidence: float
+    primary_risk: str
+    prompt: str
+    findings: list[str] = Field(default_factory=list)
+
+
+class BenchmarkMetrics(BaseModel):
+    total_cases: int
+    passed_cases: int
+    accuracy_pct: float
+    false_positive_rate: float
+    false_negative_rate: float
+    precision_pct: float
+    recall_pct: float
+    trust_score_pct: float
+    avg_tier1_latency_ms: float
+    results: list[BenchmarkCaseResult]
+
+
+# ─────────────────────────────────────────────────────────────
+# Human-in-the-Loop Feedback & Recalibration Schemas
+# ─────────────────────────────────────────────────────────────
+class FeedbackOverrideRequest(BaseModel):
+    request_id: str
+    asset_id: Optional[str] = None
+    supervisor_action: Literal["approve_override", "confirm_block"]
+    new_anchor_value: Optional[float] = None
+    supervisor_notes: str = ""
+
+
+class FeedbackOverrideResponse(BaseModel):
+    status: str
+    request_id: str
+    recalibrated: bool
+    new_baseline_mean: Optional[float] = None
+    message: str
