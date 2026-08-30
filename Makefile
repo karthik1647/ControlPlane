@@ -26,7 +26,16 @@ install:
 test:
 	python -m pytest -v backend/tests -o pythonpath=.
 
+# Run system verification and 50-case benchmark
+verify:
+	python backend/scripts/verify.py
+
+# Run latency benchmark suite
+benchmark:
+	python backend/scripts/benchmark.py
+
 # Build frontend for production
+
 build:
 	cd frontend && npm run build
 

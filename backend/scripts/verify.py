@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""
-ControlPlane.ai - Automated System Verification & 50-Case Enterprise Benchmark
-Accenture Innovation Challenge 2026 | Track: AI Oversight & Governance
-"""
+"""Unified system verification runner executing pytest and the 50-case benchmark dataset with confusion matrix reporting."""
 
 import sys
 import time
 import asyncio
 import subprocess
+from pathlib import Path
+
+# Ensure repository root is on sys.path regardless of execution directory
+repo_root = Path(__file__).resolve().parent.parent.parent
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
 from backend.app.benchmarks.dataset import BENCHMARK_DATASET
 from backend.app.scanners.pii_scanner import scan_pii
 from backend.app.scanners.injection_scanner import scan_injection_toxicity
@@ -15,6 +19,7 @@ from backend.app.scanners.cost_scanner import scan_cost_anomaly
 from backend.app.scanners.drift_sentinel import drift_tracker
 from backend.app.scanners.tier2_grounding import verify_grounding
 from backend.app.router import route_action
+
 
 async def run_50_benchmark():
     passed_count = 0
@@ -60,8 +65,8 @@ async def run_50_benchmark():
         if action == item["expected_action"]:
             passed_count += 1
 
-        is_threat = (item["type"] == "NEGATIVE")
-        flagged = (action != "allow")
+        is_threat = item["type"] == "NEGATIVE"
+        flagged = action != "allow"
 
         if is_threat and flagged:
             tp += 1
@@ -92,8 +97,9 @@ async def run_50_benchmark():
         "tp": tp,
         "fp": fp,
         "tn": tn,
-        "fn": fn
+        "fn": fn,
     }
+
 
 def main():
     print("\n" + "=" * 78)
@@ -106,7 +112,8 @@ def main():
     res = subprocess.run(
         [sys.executable, "-m", "pytest", "-v", "backend/tests", "-o", "pythonpath=."],
         capture_output=True,
-        text=True
+        text=True,
+        cwd=str(repo_root),
     )
     elapsed = time.perf_counter() - start
 
@@ -141,6 +148,7 @@ def main():
     print("[OK] System integrity verified. 100% compliant with Accenture AI Oversight standard.")
     print("=" * 78 + "\n")
     return True
+
 
 if __name__ == "__main__":
     success = main()

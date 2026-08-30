@@ -54,3 +54,15 @@ desktop.ini
 # Build artifacts
 *.pyc
 *.pyo
+
+# Local notes & scratch
+local_notes.txt
+*.notes
+.notes/
+
+# Editor / Agent configs
+.cursorrules
+.windsurfrules
+CLAUDE.md
+copilot-instructions.md
+
